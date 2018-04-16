@@ -5,7 +5,9 @@ import 'package:http/http.dart' as http;
 // This is where the app starts executing
 
 Future<List> getCurrencies() async {
-  String apiUrl = 'https://api.coinmarketcap.com/v1/ticker/?limit=50';
+  //String apiUrl = 'https://api.coinmarketcap.com/v1/ticker/?limit=50';
+  String apiUrl = 'https://ws-api.iextrading.com/1.0/tops';
+
   // Make a HTTP GET request to the CoinMarketCap API.
   // Await basically pauses execution until the get() function returns a Response
   http.Response response = await http.get(apiUrl);
@@ -56,7 +58,7 @@ class CryptoListWidget extends StatelessWidget {
 
   Widget _getAppTitleWidget() {
     return new Text(
-      'Cryptocurrencies',
+      'Stock Quotes',
       style: new TextStyle(
           color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24.0),
     );
@@ -98,15 +100,22 @@ class CryptoListWidget extends StatelessWidget {
   }
 
   Text _getSubtitleWidget(String priceUsd, String percentChange1h) {
-    return new Text('\$$priceUsd\n1 hour: $percentChange1h%');
+    String title = priceUsd + ' ' + percentChange1h;
+    //return new Text('\$$priceUsd\n1 hour: $percentChange1h%');
+    return new Text(title);
   }
 
   ListTile _getListTile(Map currency, MaterialColor color) {
+    double lastSalePrice = currency['lastSalePrice'];
+    int volume = currency['volume'];
+
     return new ListTile(
-      leading: _getLeadingWidget(currency['name'], color),
-      title: _getTitleWidget(currency['name']),
+
+      leading: _getLeadingWidget(currency['symbol'], color),
+      title: _getTitleWidget(currency['symbol']),
       subtitle: _getSubtitleWidget(
-          currency['price_usd'], currency['percent_change_1h']),
+          'Price:' + lastSalePrice.toString(), 'Volume:' + volume.toString()),
+          //currency['bidSize'], currency['askSize']),
       isThreeLine: true,
     );
   }
