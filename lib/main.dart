@@ -2,43 +2,42 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-// This is where the app starts executing
+import 'service.dart';
 
-Future<List> getCurrencies() async {
-  //String apiUrl = 'https://api.coinmarketcap.com/v1/ticker/?limit=50';
+Future<List> getStockRates() async {
   String apiUrl = 'https://ws-api.iextrading.com/1.0/tops';
 
-  // Make a HTTP GET request to the CoinMarketCap API.
+  // Make a HTTP GET request to the iextrading API.
   // Await basically pauses execution until the get() function returns a Response
   http.Response response = await http.get(apiUrl);
+
   // Using the JSON class to decode the JSON String
   return JSON.decode(response.body);
 }
 
 void main() async {
-  // Bad practice alert :). You should ideally show the UI, and probably a progress view,
-  // then when the requests completes, update the UI to show the data.
-  List currencies = await getCurrencies();
-  print(currencies);
+  // normally we should show a spinner or something else until the data is loaded
+  List stockRates = await getStockRates();
+  print(stockRates);
 
   runApp(new MaterialApp(
-    home: new CryptoListWidget(currencies),
+    home: new StockListWidget(stockRates),
   ));
 }
 
-class CryptoListWidget extends StatelessWidget {
+class StockListWidget extends StatelessWidget {
   // This is a list of material colors. Feel free to add more colors, it won't break the code
   final List<MaterialColor> _colors = [Colors.blue, Colors.indigo, Colors.red];
 
-  // The underscore before a variable name marks it as a private variable
-  final List _currencies;
+  // t_ means private variable
+  final List _stocks;
 
-  // This is a constructor in Dart. We are assigning the value passed to the constructor
-  // to the _currencies variable
-  CryptoListWidget(this._currencies);
+  // constructor, the variable gets assigned to the private variable _stocks
+  StockListWidget(this._stocks);
 
   @override
   Widget build(BuildContext context) {
+
     return new Scaffold(
       body: _buildBody(),
       backgroundColor: Colors.blue,
@@ -47,7 +46,7 @@ class CryptoListWidget extends StatelessWidget {
 
   Widget _buildBody() {
     return new Container(
-      // A top margin of 56.0. A left and right margin of 8.0. And a bottom margin of 0.0.
+      // margins, top, left, right and bottom.
       margin: const EdgeInsets.fromLTRB(8.0, 56.0, 8.0, 0.0),
       child: new Column(
         // A column widget can have several widgets that are placed in a top down fashion
@@ -70,62 +69,60 @@ class CryptoListWidget extends StatelessWidget {
     return new Flexible(
         child: new ListView.builder(
             // The number of items to show
-            itemCount: _currencies.length,
+            itemCount: _stocks.length,
             // Callback that should return ListView children
             // The index parameter = 0...(itemCount-1)
             itemBuilder: (context, index) {
-              // Get the currency at this position
-              final Map currency = _currencies[index];
+              // Get the stocks at this position
+              final Map stock = _stocks[index];
 
               // Get the icon color. Since x mod y, will always be less than y,
               // this will be within bounds
               final MaterialColor color = _colors[index % _colors.length];
 
-              return _getListItemWidget(currency, color);
+              return _getListItemWidget(stock, color);
             }));
   }
 
-  CircleAvatar _getLeadingWidget(String currencyName, MaterialColor color) {
+  CircleAvatar _getLeadingWidget(String stockSymbol, MaterialColor color) {
     return new CircleAvatar(
       backgroundColor: color,
-      child: new Text(currencyName[0]),
+      child: new Text(stockSymbol[0]),
     );
   }
 
-  Text _getTitleWidget(String currencyName) {
+  Text _getTitleWidget(String stockSymbol) {
     return new Text(
-      currencyName,
+      stockSymbol,
       style: new TextStyle(fontWeight: FontWeight.bold),
     );
   }
 
-  Text _getSubtitleWidget(String priceUsd, String percentChange1h) {
-    String title = priceUsd + ' ' + percentChange1h;
+  Text _getSubtitleWidget(String price, String volume) {
+    String title = price + ' USD ' + volume;
     //return new Text('\$$priceUsd\n1 hour: $percentChange1h%');
     return new Text(title);
   }
 
-  ListTile _getListTile(Map currency, MaterialColor color) {
-    double lastSalePrice = currency['lastSalePrice'];
-    int volume = currency['volume'];
+  ListTile _getListTile(Map stock, MaterialColor color) {
+    double lastSalePrice = stock['lastSalePrice'];
+    int volume = stock['volume'];
 
     return new ListTile(
-
-      leading: _getLeadingWidget(currency['symbol'], color),
-      title: _getTitleWidget(currency['symbol']),
+      leading: _getLeadingWidget(stock['symbol'], color),
+      title: _getTitleWidget(stock['symbol']),
       subtitle: _getSubtitleWidget(
           'Price:' + lastSalePrice.toString(), 'Volume:' + volume.toString()),
-          //currency['bidSize'], currency['askSize']),
       isThreeLine: true,
     );
   }
 
-  Container _getListItemWidget(Map currency, MaterialColor color) {
+  Container _getListItemWidget(Map stock, MaterialColor color) {
     // Returns a container widget that has a card child and a top margin of 5.0
     return new Container(
       margin: const EdgeInsets.only(top: 5.0),
       child: new Card(
-        child: _getListTile(currency, color),
+        child: _getListTile(stock, color),
       ),
     );
   }
